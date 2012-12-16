@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>karo</id>
+    <version>$version$</version>
+    <title>karo</title>
+    <authors>Ole Lynge Soerensen</authors>
+    <owners>Ole Lynge Soerensen</owners>
+    <licenseUrl>http://www.opensource.org/licenses/mit-license.php</licenseUrl>
+    <projectUrl>http://github.com/uncas/karo</projectUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <description>Convention bases msbuild package scripts.</description>
+    <releaseNotes>MSBuild package scripts.</releaseNotes>
+    <copyright>Copyright 2012</copyright>
+    <dependencies>
+      <dependency id="MSBuildTasks" version="[1.4.0.45]" />
+      <dependency id="NUnit" version="[2.5.10.11092]" />
+    </dependencies> 
+  </metadata>
+  <files>
+    <file src="output\collect\**\*.*" target="tools" />
+    <file src="output\collect\**\*" target="tools" />
+  </files>
+</package>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0"
+  DefaultTargets="Package">
+
+  <PropertyGroup>
+    <RootFolder>$(MSBuildProjectDirectory)</RootFolder>
+    <PackageFolder>$(RootFolder)\packages</PackageFolder>
+    <SourceFolder>$(RootFolder)\source</SourceFolder>
+    <OutputFolder>$(RootFolder)\output</OutputFolder>
+    <CollectFolder>$(OutputFolder)\collect</CollectFolder>
+    <NuGetFolder>$(RootFolder)\.nuget</NuGetFolder>
+    <Version>0.1</Version>
+    <CommitCount Condition=" '$(CommitCount)' == '' ">1</CommitCount>
+    <Revision Condition=" '$(Revision)' == '' ">1</Revision>
+    <FullVersion>0.1.$(CommitCount)-r$(Revision)</FullVersion>
+  </PropertyGroup>
+
+  <Target Name="Collect">
+    <RemoveDir Directories="$(OutputFolder)" ContinueOnError="true" />
+    <MakeDir Directories="$(OutputFolder)" />
+    <ItemGroup>
+      <SourceFiles Include="$(SourceFolder)\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(SourceFiles)"
+      DestinationFiles="$(CollectFolder)\%(RecursiveDir)\%(FileName)%(Extension)" />
+  </Target>
+
+  <Target Name="Package" DependsOnTargets="Collect">
+    <Exec Command="$(NuGetFolder)\nuget.exe pack $(RootFolder)\karo.nuspec -Version $(FullVersion) -OutputDirectory C:\NuGetPackages" />
+  </Target>
+
+</Project>

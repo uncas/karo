@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="GetToolsFromNuGet">
+
+  <PropertyGroup>
+    <DOUBLE_QUOTES>%22</DOUBLE_QUOTES>
+    <RootFolder>$(MSBuildProjectDirectory)\..</RootFolder>
+    <NuGetExecutable>$(RootFolder)\.nuget\nuget.exe</NuGetExecutable>
+  </PropertyGroup>
+
+  <Target Name="GetToolsFromNuGet">
+    <Exec Command="$(DOUBLE_QUOTES)$(NuGetExecutable)$(DOUBLE_QUOTES) install $(DOUBLE_QUOTES)$(RootFolder)\packages.config$(DOUBLE_QUOTES) -OutPutDirectory $(DOUBLE_QUOTES)$(RootFolder)\packages$(DOUBLE_QUOTES)" />
+  </Target>
+
+</Project>

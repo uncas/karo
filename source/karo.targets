@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0"
+  DefaultTargets="Package" InitialTargets="GetProjects">
+
+  <PropertyGroup>
+    <RootFolder>$(MSBuildProjectDirectory)</RootFolder>
+    <PackageFolder>$(RootFolder)\packages</PackageFolder>
+    <MSBuildCommunityTasksPath>$(PackageFolder)\MSBuildTasks.1.4.0.45\tools</MSBuildCommunityTasksPath>
+    <ProjectName Condition=" '$(ProjectName)' == '' ">NoProject</ProjectName>
+    <BranchName Condition=" '$(BranchName)' == '' ">NoBranch</BranchName>
+    <Revision Condition=" '$(Revision)' == '' ">NoRevision</Revision>
+    <PackageFileName Condition=" '$(PackageFileName)' == '' ">$(ProjectName)-$(BranchName)-$(Revision).zip</PackageFileName>
+    <SourceFolder Condition=" '$(SourceFolder)' == '' ">$(RootFolder)\source</SourceFolder>
+    <OutputFolder>$(RootFolder)\output</OutputFolder>
+    <CollectFolder>$(OutputFolder)\collect</CollectFolder>
+    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+    <PackageFilePath>$(OutputFolder)\$(PackageFileName)</PackageFilePath>
+  </PropertyGroup>
+
+  <Import Project="$(MSBuildCommunityTasksPath)\MSBuild.Community.Tasks.Targets" />
+
+  <Target Name="Compile">
+    <MSBuild Projects="$(Solution)"
+      Properties="Configuration=$(Configuration)">
+    </MSBuild>
+  </Target>
+
+  <Target Name="GetProjects">
+    <!-- Get all the projects associated with the solution -->
+    <GetSolutionProjects Solution="$(Solution)">
+      <Output TaskParameter="Output" ItemName="SolutionProjects" />
+    </GetSolutionProjects>
+
+    <!-- Filter out solution folders and non .csproj items -->
+    <RegexMatch Input="@(SolutionProjects)" Expression=".[\.]csproj$">
+      <Output TaskParameter="Output" ItemName="CSProjects"/>
+    </RegexMatch>
+
+    <!-- Resolve the test projects -->
+    <RegexMatch Input="@(CSProjects)" Expression=".[\.][(Test)(Tests)][\.]csproj$">
+      <Output TaskParameter="Output" ItemName="TestProjects"/>
+    </RegexMatch>
+
+    <!-- Resolve the web projects -->
+    <RegexMatch Input="@(CSProjects)" Expression=".(Web)[\.]csproj$">
+      <Output TaskParameter="Output" ItemName="WebProjects"/>
+    </RegexMatch>
+
+    <!-- Resolve the service projects -->
+    <RegexMatch Input="@(CSProjects)" Expression=".(WindowsService)[\.]csproj$">
+      <Output TaskParameter="Output" ItemName="ServiceProjects"/>
+    </RegexMatch>
+
+    <Message Text="CS project: %(CSProjects.ProjectName)" />
+    <Message Text="Test project: %(TestProjects.ProjectName)" />
+    <Message Text="Web project: %(WebProjects.ProjectName)" />
+    <Message Text="Service project: %(ServiceProjects.ProjectName)" />
+  </Target>
+
+  <Target Name="Test" DependsOnTargets="Compile">
+    <MSBuild Projects="$(MSBuildProjectFile)"
+             Targets="TestBase"
+             Properties="TestAssembly=%(TestProjects.ProjectName)" />
+  </Target>
+
+  <Target Name="TestBase" Condition=" '$(TestAssembly)' != '' ">
+    <PropertyGroup>
+      <NUnitPath>$(RootFolder)\packages\NUnit.2.5.10.11092\tools</NUnitPath>
+      <NUnitTestResultFile>TestResults</NUnitTestResultFile>
+      <TestFolder>$(SourceFolder)\$(TestAssembly)\bin\$(Configuration)</TestFolder>
+      <TestAssemblyPath>$(TestFolder)\$(TestAssembly).dll</TestAssemblyPath>
+      <NUnitTestResultFilePath>$(TestAssemblyPath).$(NUnitTestResultFile)</NUnitTestResultFilePath>
+    </PropertyGroup>
+
+    <NUnit Assemblies="$(TestAssemblyPath)"
+           ToolPath="$(NUnitPath)"
+           WorkingDirectory="$(TestFolder)"
+           OutputXmlFile="$(NUnitTestResultFilePath)"
+           IncludeCategory="$(IncludeCategory)"
+           ExcludeCategory="$(ExcludeCategory)">
+    </NUnit>
+  </Target>
+
+  <Target Name="Collect" DependsOnTargets="Test">
+    <RemoveDir Directories="$(OutputFolder)" ContinueOnError="true" />
+    <MakeDir Directories="$(OutputFolder)" />
+    <MSBuild Projects="$(MSBuildProjectFile)"
+      Targets="CopyWebSite"
+      Properties="WebSiteProjectName=%(WebProjects.ProjectName)" />
+    <MSBuild Projects="$(MSBuildProjectFile)"
+      Targets="CopyService"
+      Properties="ServiceProjectName=%(ServiceProjects.ProjectName)" />
+  </Target>
+
+  <Target Name="CopyWebSite" Condition=" '$(WebSiteProjectName)' != '' ">
+    <PropertyGroup>
+      <CollectWebFolder>$(CollectFolder)\WebSites\$(WebSiteProjectName)</CollectWebFolder>
+    </PropertyGroup>
+    <MSBuild Projects="$(SourceFolder)\$(WebSiteProjectName)\$(WebSiteProjectName).csproj"
+      Targets="ResolveReferences; _CopyWebApplication"
+      BuildInParallel="true"
+      Properties="Configuration=$(Configuration);WebProjectOutputDir=$(CollectWebFolder)\;OutDir=$(CollectWebFolder)\bin\" />
+  </Target>
+  
+  <Target Name="CopyService" Condition=" '$(ServiceProjectName)' != '' ">
+    <PropertyGroup>
+      <CollectServiceFolder>$(CollectFolder)\Services\$(ServiceProjectName)</CollectServiceFolder>
+    </PropertyGroup>
+    <ItemGroup>
+      <ServiceOutput Include="$(SourceFolder)\$(ServiceProjectName)\bin\$(Configuration)\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ServiceOutput)"
+      DestinationFiles="$(CollectServiceFolder)\%(RecursiveDir)\%(FileName)%(Extension)" />
+  </Target>
+
+  <Target Name="Package" DependsOnTargets="Collect">
+    <ItemGroup>
+      <ZipFiles Include="$(CollectFolder)\**\*.*" />
+    </ItemGroup>
+    <Zip
+      Files="@(ZipFiles)"
+      WorkingDirectory="$(CollectFolder)"
+      ZipFileName="$(PackageFilePath)" />
+  </Target>
+
+</Project>

@@ -1,0 +1,9 @@
+bin/
+obj/
+
+/output/
+/packages/
+/demo/output/
+/demo/packages/
+
+*.suo

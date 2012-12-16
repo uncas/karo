@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
+	ToolsVersion="4.0">
+
+  <PropertyGroup>
+    <RootFolder>$(MSBuildProjectDirectory)</RootFolder>
+    <SourceFolder>$(RootFolder)\source</SourceFolder>
+    <PackageFolder>$(RootFolder)\packages</PackageFolder>
+    <ScriptsFolder>$(PackageFolder)\scripts</ScriptsFolder>
+    <ProjectName>Demo</ProjectName>
+    <BranchName>master</BranchName>
+    <Revision>demorev</Revision>
+    <Solution>$(SourceFolder)\Sample.sln</Solution>
+  </PropertyGroup>
+
+  <!-- Add non-standard-named services or websites to ServiceProjects or WebProjects -->
+  <ItemGroup>
+    <ServiceProjects Include="SampleHost">
+      <ProjectName>Sample.SampleHost</ProjectName>
+    </ServiceProjects>
+  </ItemGroup>
+
+  <Import Project="$(ScriptsFolder)\karo.targets" />
+
+</Project>

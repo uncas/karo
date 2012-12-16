@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
+  ToolsVersion="4.0"
+  DefaultTargets="GetDependencies">
+
+  <PropertyGroup>
+    <DOUBLE_QUOTES>%22</DOUBLE_QUOTES>
+    <RootFolder>$(MSBuildProjectDirectory)</RootFolder>
+    <PackageFolder>$(RootFolder)\packages</PackageFolder>
+    <ScriptSource>$(RootFolder)\..\source</ScriptSource>
+    <ScriptTarget>$(PackageFolder)\scripts</ScriptTarget>
+    <NuGetExecutable>$(RootFolder)\..\.nuget\nuget.exe</NuGetExecutable>
+  </PropertyGroup>
+
+  <Target Name="GetDependencies">
+    <ItemGroup>
+      <ScriptFiles Include="$(ScriptSource)\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ScriptFiles)"
+      DestinationFiles="$(ScriptTarget)\%(RecursiveDir)\%(FileName)%(Extension)" />
+
+    <Exec Command="$(DOUBLE_QUOTES)$(NuGetExecutable)$(DOUBLE_QUOTES) install $(DOUBLE_QUOTES)$(ScriptSource)\packages.config$(DOUBLE_QUOTES) -OutPutDirectory $(DOUBLE_QUOTES)$(PackageFolder)$(DOUBLE_QUOTES)" />
+  </Target>
+
+</Project>
